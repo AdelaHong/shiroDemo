@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hsh.test.mapper.WebChatMapper">
+
+    <!--查询access_token-->
+    <select id="queryAccessToken"  resultType="com.hsh.test.vo.AccessToken">
+          select  * from t_access_token
+    </select>
+
+    <!--删除access_token-->
+    <delete id="deleteAccessToken">
+        DELETE from t_access_token
+    </delete>
+    
+    <!--保存获取的access_token-->
+    <insert id="insertAccessToken" parameterType="com.hsh.test.vo.AccessToken">
+        insert into t_access_token (expires_in,createTime,access_token) values(
+        #{expires_in},#{createTime},#{access_token})
+    </insert>
+
+    <!--用户信息入库-->
+    <insert id="inserUser" parameterType="com.hsh.test.vo.User">
+        insert into t_user (openId,imgurl,sex,province,city,subscribe_time,unsubscribe_time,state,nickname) values(
+        #{openId},#{imgurl},#{sex},#{province},#{city},#{subscribe_time},#{unsubscribe_time},#{state},#{nickname})
+    </insert>
+
+    <!--取消关注-->
+    <update id="unFollow" parameterType="com.hsh.test.vo.User" >
+        update t_user
+        <set>
+            state = #{state},
+            <if test="null != unsubscribe_time">
+                unsubscribe_time = #{unsubscribe_time}
+            </if>
+
+        </set>
+
+        <where>
+            openid=#{openId}
+        </where>
+    </update>
+
+    <!--查询用户是否关注-->
+    <select id="queryUserByOpenid"  resultType="Integer">
+        select  count(*)count from t_user t where t.openid=#{openId}
+    </select>
+
+    <!--更新用户关注状态-->
+    <update id="updateUserStatus" parameterType="com.hsh.test.vo.User" >
+        update t_user
+        <set>
+            state = #{state},
+            <if test="null != unsubscribe_time">
+                subscribe_time = #{subscribe_time}
+            </if>
+
+        </set>
+
+        <where>
+            openid=#{openId}
+        </where>
+    </update>
+</mapper>
