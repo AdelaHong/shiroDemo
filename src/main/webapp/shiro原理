@@ -1,0 +1,11 @@
+1.shiro密码比对的原理
+   shiro会将用户输入的密码封装在UsernamePasswordToken中,
+   SimpleAuthenticationInfo封装了查询后的结果，
+   在SimpleCredentialsMatcher的doCredentialsMatch方法进行对比
+
+2.盐值加密：在原先的加密算法上使用盐值加密
+   ByteSource salt = ByteSource.Util.bytes(user.getUserName());   user.getUserName()指定一个唯一的值进行盐值加密
+   AuthenticationInfo authcInfo = new SimpleAuthenticationInfo(user.getUserName(),sh,salt,"xx");
+
+3.shiro的工作原理：创建Subject实例，调用Subject的login方法，经过一系列的参数传递，
+   最终是调用自己定义的Realm，Realm会判断时候有info,有则进行密码的比对

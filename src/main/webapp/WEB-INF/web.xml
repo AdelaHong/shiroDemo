@@ -7,7 +7,7 @@
     <welcome-file>html/exercise.html</welcome-file>
   </welcome-file-list> -->
   <welcome-file-list>
-    <welcome-file>index.jsp</welcome-file>
+    <welcome-file>jsp/index.jsp</welcome-file>
   </welcome-file-list>
 
   <context-param>
@@ -22,7 +22,8 @@
   <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>
-      classpath:/com/comverse/timesheet/config/ApplicationContext.xml
+      classpath:/com/comverse/timesheet/config/ApplicationContext.xml,
+        classpath:/com/comverse/timesheet/config/spring-shiro.xml
     </param-value>
   </context-param>
   <listener>
@@ -37,7 +38,9 @@
     </servlet-class>
     <init-param>
       <param-name>contextConfigLocation</param-name>
-      <param-value>classpath:/com/comverse/timesheet/config/dispatcher-servlet.xml </param-value>
+      <param-value>
+          classpath:/com/comverse/timesheet/config/dispatcher-servlet.xml
+      </param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -79,4 +82,18 @@
     <res-type>javax.sql.DataSource</res-type>
     <res-auth>Container</res-auth>
   </resource-ref>
+    <!-- Shiro Filter is defined in the spring application context: -->
+    <filter>
+        <filter-name>shiroFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+        <init-param>
+            <param-name>targetFilterLifecycle</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>shiroFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
 </web-app>

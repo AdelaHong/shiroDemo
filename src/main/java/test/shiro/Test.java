@@ -13,7 +13,7 @@ import org.apache.shiro.util.Factory;
  * Created by HSH on 2017/6/30.
  */
 public class Test {
-    private Logger log = Logger.getLogger(Test.class);
+    /*private Logger log = Logger.getLogger(Test.class);
     @org.junit.Test
     public void test(){
         Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:shiro.ini");
@@ -44,5 +44,5 @@ public class Test {
         } else {
             log.info("不拥有此权限");
         }
-    }
+    }*/
 }

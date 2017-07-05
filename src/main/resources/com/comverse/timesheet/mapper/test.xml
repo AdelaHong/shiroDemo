@@ -6,4 +6,20 @@
           select  count(*) from users
     </select>
 
+    <resultMap id="BaseUserMap" type="com.vo.User" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="username" property="userName" jdbcType="VARCHAR" />
+        <result column="password" property="password" jdbcType="VARCHAR" />
+    </resultMap>
+    <select id="queryInfoByUsername"  parameterType="string" resultMap="BaseUserMap">
+        select t.username,t.password ,t.id from users t where t.username=#{userName}
+    </select>
+
+    <select id="getUserRoles" parameterType="string" resultType="string">
+        select roles from users where t.username=#{userName}
+    </select>
+
+    <select id="getUserPermissions" parameterType="string" resultType="string">
+        select permissions from users where t.username=#{userName}
+    </select>
 </mapper>

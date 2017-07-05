@@ -51,9 +51,13 @@
           <element id="library" level="project" name="Maven: commons-beanutils:commons-beanutils:1.8.3" />
           <element id="library" level="project" name="Maven: org.apache.shiro:shiro-spring:1.2.4" />
           <element id="library" level="project" name="Maven: org.crazycake:shiro-redis:2.4.2.1-RELEASE" />
+          <element id="library" level="project" name="Maven: org.apache.shiro:shiro-quartz:1.2.4" />
+          <element id="library" level="project" name="Maven: org.opensymphony.quartz:quartz:1.6.1" />
           <element id="library" level="project" name="Maven: org.aspectj:aspectjweaver:1.7.0" />
           <element id="library" level="project" name="Maven: aopalliance:aopalliance:1.0" />
           <element id="library" level="project" name="Maven: cglib:cglib-nodep:2.2.2" />
+          <element id="library" level="project" name="Maven: org.apache.shiro:shiro-ehcache:1.2.4" />
+          <element id="library" level="project" name="Maven: net.sf.ehcache:ehcache-core:2.5.0" />
         </element>
       </element>
       <element id="directory" name="META-INF">
