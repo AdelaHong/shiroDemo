@@ -2,27 +2,22 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="
-       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
 
     <!-- Shiro默认会使用Servlet容器的Session,可通过sessionMode属性来指定使用Shiro原生Session -->
     <!-- 即<property name="sessionMode" value="native"/>,详细说明见官方文档 -->
     <!-- 这里主要是设置自定义的单Realm应用,若有多个Realm,可使用'realms'属性代替 -->
     <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-        <!--<property name="cacheManager" ref="cacheManager1"/>-->
-        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
-        <!--<property name="sessionMode" value="native"/>-->
         <property name="realm" ref="jdbcRealm"/>
-        <property name="authorizer" ref="authorizer"/>
-
+        <property name="cacheManager" ref="cacheManager"/>
+        <property name="sessionManager" ref="sessionManager"/>
+        <property name="rememberMeManager" ref="rememberMeManager"/>
     </bean>
 
-    <bean id="authorizer" class="org.apache.shiro.authz.ModularRealmAuthorizer">
-        <!--<property name="realm">
-            <list>
-                <ref  bean="jdbcRealm"/>
-            </list>
-        </property>-->
+    <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager">
+        <!--<property name="cacheManagerConfigFile" value="/com/comverse/timesheet/config/ehcache/ehcache.xml"/>-->
     </bean>
 
     <!-- 继承自AuthorizingRealm的自定义Realm,即指定Shiro验证用户登录的类为自定义realm -->
@@ -37,16 +32,52 @@
         <property name="hashIterations" value="2" />
     </bean>
     <bean id ="testServiceImpl" class="com.service.impl.TestServiceImpl"></bean>
-    <!-- =========================================================
-         Shiro Spring-specific integration
-         ========================================================= -->
-    <!-- Post processor that automatically invokes init() and destroy() methods
-         for Spring-configured Shiro objects so you don't have to
-         1) specify an init-method and destroy-method attributes for every bean
-            definition and
-         2) even know which Shiro objects require these methods to be
-            called. -->
-    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 会话ID生成器 -->
+    <bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>
+
+    <!-- 会话Cookie模板，使用sid存储sessionid -->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="sid"/>
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="180000"/>
+    </bean>
+
+    <!-- 会话DAO -->
+    <bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO">
+        <property name="activeSessionsCacheName" value="shiro-activeSessionCache"/>
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean>
+
+    <!-- 会话验证调度器 -->
+    <bean id="sessionValidationScheduler" class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler">
+        <property name="sessionValidationInterval" value="1800000"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+
+    <!-- 会话管理器 -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="1800000"/>
+        <property name="deleteInvalidSessions" value="true"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+        <property name="sessionDAO" ref="sessionDAO"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe"/>
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="2592000"/><!-- 30 days -->
+    </bean>
+
+    <!-- rememberMe管理器  -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cipherKey"
+                  value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
 
     <!-- 启用shiro注解: -->
     <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
@@ -69,13 +100,16 @@
         <property name="loginUrl" value="/login.do"/>
         <property name="successUrl" value="/success.do"/>
         <!-- 权限认证失败跳转路径 -->
-        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+        <property name="unauthorizedUrl" value="/unauthorized.do"/>
 
-        <!-- <property name="filters">
-            <util:map>
-                <entry key="aName" value-ref="someFilterPojo"/>
-            </util:map>
-        </property> -->
+        <property name="filters">
+            <map>
+                <entry key="roles">
+                    <bean
+                        class="com.shiro.CustomRolesAuthorizationFilter" />
+                </entry>
+            </map>
+        </property>
         <!-- shiro 连接约束 -->
         <!-- Shiro连接约束配置,即过滤链的定义 -->
         <!-- 此处可配合我的这篇文章来理解各个过滤连的作用http://blog.csdn.net/jadyer/article/details/12172839 -->
@@ -87,15 +121,19 @@
             /login* 匹配零个或多个字符，login1  login123都能匹配上
             login/**  匹配路径下零个或多个路径    login/目录下的所以方法
             -->
+
+        <!--配置一个bean   该bean实际上是一个Map，通过实例工厂的方式-->
         <property name="filterChainDefinitions">
 
             <value>
                 /login.do = anon
-                /** = authc
+                /logout = logout
                 /admin.do = roles[admin]
-                /user.do = roles[user]
+                /user.do = roles[admin,user]
+                /** = authc
             </value>
         </property>
     </bean>
-
+    <!--shiro生命周期-->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
 </beans>

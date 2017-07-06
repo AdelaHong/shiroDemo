@@ -5,6 +5,7 @@ import com.vo.User;
 import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -53,12 +54,21 @@ public class TestController {
         return "index";
     }
 
+
+
+    @RequestMapping("unauthorized")
+    public String unauthorized(){
+        return "unauthorized";
+    }
+
+
     @RequestMapping("admin")
+    @RequiresRoles("admin")
     public String admin () {
         return "admin";
     }
 
-    @RequestMapping("user")
+    @RequestMapping({"admin","user"})
     public String user () {
         return "user";
     }

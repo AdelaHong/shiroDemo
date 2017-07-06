@@ -16,10 +16,10 @@
     </select>
 
     <select id="getUserRoles" parameterType="string" resultType="string">
-        select roles from users where t.username=#{userName}
+        select roles from users where username=#{userName}
     </select>
 
     <select id="getUserPermissions" parameterType="string" resultType="string">
-        select permissions from users where t.username=#{userName}
+        select permissions from users where username=#{userName}
     </select>
 </mapper>

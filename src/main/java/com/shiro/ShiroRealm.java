@@ -3,6 +3,7 @@ package com.shiro;
 import com.service.ITestService;
 import com.service.impl.TestServiceImpl;
 import com.vo.User;
+import org.apache.log4j.Logger;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * Created by HSH on 2017/7/3.
  */
 public class ShiroRealm extends AuthorizingRealm {
+    private static Logger log= Logger.getLogger(AuthorizingRealm.class);
 
     private ITestService testService;
 
@@ -40,7 +42,9 @@ public class ShiroRealm extends AuthorizingRealm {
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         try {
             authorizationInfo.setRoles(testService.getUserRoles(userName));
+            log.info("用户的角色："+ testService.getUserRoles(userName).toString());
             authorizationInfo.setStringPermissions(testService.getUserPermissions(userName));
+            log.info("用户的权限："+ testService.getUserPermissions(userName).toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
